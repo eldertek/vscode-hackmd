@@ -91,11 +91,12 @@ export class HackMDFsProvider implements vscode.FileSystemProvider {
     try {
       const contentString = Buffer.from(content).toString();
       await recordUsage(API.updateNoteContent(noteId, contentString, { unwrapData: false }));
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-
+      const errMsg = e?.response?.data?.message || e?.message || 'Unknown save error';
+      vscode.window.showErrorMessage(`Failed to save HackMD note: ${errMsg}`);
       throw vscode.FileSystemError.Unavailable(
-        'Try to save again when the internet connection is back. You can save a local copy on your computer for restoration.'
+        `Failed to save HackMD note: ${errMsg}. Try to save again when the internet connection is back. You can save a local copy on your computer for restoration.`
       );
     }
   }

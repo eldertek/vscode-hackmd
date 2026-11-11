@@ -43,7 +43,7 @@ export const meStore = createStore<UserState>()((set) => ({
     set({ user: currentUser });
   },
   checkIsOwner: (note: Note) => {
-    return note.userPath === meStore.getState().user.userPath;
+    return note.userPath === meStore.getState().user?.userPath;
   },
 }));
 

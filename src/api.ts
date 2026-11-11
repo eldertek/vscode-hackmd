@@ -21,16 +21,21 @@ export async function initializeAPIClient(context: vscode.ExtensionContext, forc
       value: accessToken,
     });
 
-    if (!input) {
+    if (!input || !input.trim()) {
       return;
     }
 
-    await context.secrets.store(ACCESS_TOKEN_KEY, input);
-    accessToken = input;
+    accessToken = input.trim();
+    await context.secrets.store(ACCESS_TOKEN_KEY, accessToken);
   }
 
   API = new ApiClient(accessToken, apiEndPoint, { wrapResponseErrors: false });
-  await meStore.getState().refreshLogin();
+  try {
+    await meStore.getState().refreshLogin();
+  } catch (err: any) {
+    const message = err?.response?.data?.message || err?.message || 'Invalid access token or network error';
+    vscode.window.showErrorMessage(`HackMD authentication failed: ${message}`);
+  }
 }
 
 export async function forceRefreshAPIClient(context: vscode.ExtensionContext) {
@@ -40,7 +45,9 @@ export async function forceRefreshAPIClient(context: vscode.ExtensionContext) {
 vscode.workspace.onDidChangeConfiguration(async (e) => {
   if (e.affectsConfiguration('Hackmd')) {
     const extension = vscode.extensions.getExtension<{ context: vscode.ExtensionContext }>('HackMD.hackmd-vscode');
-    await initializeAPIClient(extension.exports.context);
+    if (extension && extension.exports && extension.exports.context) {
+      await initializeAPIClient(extension.exports.context);
+    }
   }
 });
 
